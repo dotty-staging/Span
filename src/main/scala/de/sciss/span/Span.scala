@@ -27,88 +27,95 @@ package de.sciss.span
 
 import annotation.switch
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import de.sciss.lucre.io.{ImmutableSerializer, DataInput, DataOutput, Writable}
+import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput, Writable}
 
 object Span {
-   def from( start: Long ) : From                     = From( start )
-   def until( stop: Long ) : Until                    = Until( stop )
-   def apply( start: Long, stop: Long ) : Span        = Apply( start ,stop )
-   def unapply( span: Span ) : Option[ (Long, Long) ] = Some( (span.start, span.stop) )
-   def all : All.type                                 = All
-   def void : Void.type                               = Void
+  def from (start: Long): From  = From (start)
+  def until(stop : Long): Until = Until(stop )
 
-   implicit object serializer extends ImmutableSerializer[ Span ] {
+  def apply  (start: Long, stop: Long): Span    = Apply(start, stop)
+  def unapply(span: Span): Option[(Long, Long)] = Some((span.start, span.stop))
+
+  def all : All .type = All
+  def void: Void.type = Void
+
+  implicit object serializer extends ImmutableSerializer[ Span ] {
       def write( v: Span, out: DataOutput ) { v.write( out )}
       def read( in: DataInput ) : Span = Span.read( in )
    }
 
-   def read( in: DataInput ) : Span = {
-      val cookie = in.readByte()
-      require( cookie == 0, "Unexpected cookie " + cookie )
-      Span( in.readLong(), in.readLong() )
-   }
+  def read(in: DataInput): Span = {
+    val cookie = in.readByte()
+    require(cookie == 0, "Unexpected cookie " + cookie)
+    Span(in.readLong(), in.readLong())
+  }
 
-   sealed trait NonVoid          extends SpanLike
-   sealed trait Bounded          extends NonVoid
-   sealed trait FromOrAll        extends Open   { def nonEmptyOption : Option[ FromOrAll ]}
-   sealed trait HasStartOrVoid   extends SpanLike { def nonEmptyOption : Option[ HasStart ]}
-   sealed trait UntilOrAll       extends Open { def nonEmptyOption : Option[ UntilOrAll ]}
-   sealed trait HasStopOrVoid    extends SpanLike { def nonEmptyOption : Option[ HasStop ]}
-   sealed trait SpanOrVoid       extends HasStartOrVoid with HasStopOrVoid {
-      /**
-       * The span's length. For a void span, this is zero, otherwise it is
-       * `stop - start`.
-       */
-      def length: Long
+  sealed trait NonVoid          extends SpanLike
+  sealed trait Bounded          extends NonVoid
+  sealed trait FromOrAll        extends Open     { def nonEmptyOption: Option[FromOrAll]  }
+  sealed trait HasStartOrVoid   extends SpanLike { def nonEmptyOption: Option[HasStart]   }
+  sealed trait UntilOrAll       extends Open     { def nonEmptyOption: Option[UntilOrAll] }
+  sealed trait HasStopOrVoid    extends SpanLike { def nonEmptyOption: Option[HasStop]    }
+  sealed trait SpanOrVoid       extends HasStartOrVoid with HasStopOrVoid {
 
-      def shift( delta: Long ) : SpanOrVoid
-      def intersect( that: SpanLike ) : SpanOrVoid
-      def subtract( that: Span.Open ) : SpanOrVoid
-      def subtract( that: SpanLike ) : IIdxSeq[ SpanOrVoid ]
+    /**
+     * The span's length. For a void span, this is zero, otherwise it is
+     * `stop - start`.
+     */
+    def length: Long
 
-      def nonEmptyOption : Option[ Span ]
-   }
+    def shift    (delta: Long)    : SpanOrVoid
+    def intersect(that: SpanLike) : SpanOrVoid
+    def subtract (that: Span.Open): SpanOrVoid
+    def subtract (that: SpanLike) : IIdxSeq[SpanOrVoid]
+
+    def nonEmptyOption: Option[Span]
+  }
 
   object HasStart {
     def unapply(span: HasStart): Option[Long] = Some(span.start)
   }
+
   sealed trait HasStart extends Bounded with HasStartOrVoid {
-      /**
-       * @return  the start position of the span. this is considered included in the interval
-       */
-      def start: Long
-      def shift( delta: Long ) : HasStart
-//      def invert : HasStop
+    /**
+     * @return  the start position of the span. this is considered included in the interval
+     */
+    def start: Long
 
-      final def compareStart( pos: Long ) = if( start < pos ) -1 else if( start > pos ) 1 else 0
+    def shift(delta: Long): HasStart
 
-      def intersect( that: SpanLike ) : HasStartOrVoid
-      def subtract( that: Span.Open ) : HasStartOrVoid
-      def subtract( that: SpanLike ) : IIdxSeq[ HasStart ]
-   }
+    final def compareStart(pos: Long) = if (start < pos) -1 else if (start > pos) 1 else 0
+
+    def intersect(that: SpanLike) : HasStartOrVoid
+    def subtract (that: Span.Open): HasStartOrVoid
+    def subtract (that: SpanLike) : IIdxSeq[HasStart]
+  }
+
   object HasStop {
     def unapply(span: HasStop): Option[Long] = Some(span.stop)
   }
-   sealed trait HasStop extends Bounded with HasStopOrVoid {
-      /**
-       * @return  the stop position of the span. this is considered excluded in the interval
-       */
-      def stop: Long
-      def shift( delta: Long ) : HasStop
-//      def invert : HasStart
 
-      final def compareStop( pos: Long ) = if( stop < pos ) -1 else if( stop > pos ) 1 else 0
-   }
+  sealed trait HasStop extends Bounded with HasStopOrVoid {
+    /**
+     * @return  the stop position of the span. this is considered excluded in the interval
+     */
+    def stop: Long
 
-   sealed trait Open extends NonVoid {
-      final def isEmpty    = false
-      final def nonEmpty   = true
-   
-      def shift( delta: Long ) : Open
-      def union( that: SpanLike ) : Open
-      def invert : SpanLike
-   }
-   case object All extends FromOrAll with UntilOrAll {
+    def shift(delta: Long): HasStop
+
+    final def compareStop(pos: Long) = if (stop < pos) -1 else if (stop > pos) 1 else 0
+  }
+
+  sealed trait Open extends NonVoid {
+    final def isEmpty  = false
+    final def nonEmpty = true
+
+    def shift(delta: Long)   : Open
+    def union(that: SpanLike): Open
+    def invert: SpanLike
+  }
+
+  case object All extends FromOrAll with UntilOrAll {
       def nonEmptyOption : Option[ All.type ] = Some( this )
 
       def shift( delta: Long ) : All.type = this
