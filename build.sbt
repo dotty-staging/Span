@@ -1,22 +1,22 @@
-name := "Span"
+name         := "Span"
 
-version := "1.2.0"
+version      := "1.2.0"
 
 organization := "de.sciss"
 
 scalaVersion := "2.10.1"
 
-description := "A simple data type for describing sample frame intervals"
+description  := "A simple data type for describing sample frame intervals"
 
-homepage <<= name { n => Some(url("https://github.com/Sciss/" + n)) }
+homepage     := Some(url("https://github.com/Sciss/" + name.value))
 
-licenses := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
+licenses     := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
 
 initialCommands in console := """import de.sciss.span._"""
 
 libraryDependencies in ThisBuild ++= Seq(
-   "de.sciss" %% "serial" % "1.0.+",
-   "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+  "de.sciss"      %% "serial"    % "1.0.+",
+  "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
 
 retrieveManaged := true
@@ -25,19 +25,18 @@ retrieveManaged := true
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
-   Some( if( v.endsWith( "-SNAPSHOT" ))
-      "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-   else
-      "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-   )
-}
+publishTo :=
+  Some(if (version.value endsWith "-SNAPSHOT")
+    "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  else
+    "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+  )
 
 publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra <<= name { n =>
+pomExtra := { val n = name.value
 <scm>
   <url>git@github.com:Sciss/{n}.git</url>
   <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
@@ -51,3 +50,12 @@ pomExtra <<= name { n =>
 </developers>
 }
 
+// ---- ghpages ----
+
+site.settings
+
+ghpages.settings
+
+git.remoteRepo := "git@github.com:Sciss/" + name.value + ".git"
+
+site.includeScaladoc()
