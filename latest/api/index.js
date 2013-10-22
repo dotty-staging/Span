@@ -1,0 +1,1 @@
+Index.PACKAGES = {"de" : [], "de.sciss" : [], "de.sciss.span" : [{"trait" : "de\/sciss\/span\/Span.html", "object" : "de\/sciss\/span\/Span$.html", "name" : "de.sciss.span.Span"}, {"trait" : "de\/sciss\/span\/SpanLike.html", "object" : "de\/sciss\/span\/SpanLike$.html", "name" : "de.sciss.span.SpanLike"}]};
