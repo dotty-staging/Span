@@ -2,7 +2,7 @@
  *  Span.scala
  *  (Span)
  *
- *  Copyright (c) 2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2013-2014 Hanns Holger Rutz. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 package de.sciss.span
 
 import annotation.switch
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput, Writable}
 
 object Span {
@@ -39,14 +39,15 @@ object Span {
   def all : All .type = All
   def void: Void.type = Void
 
-  implicit object serializer extends ImmutableSerializer[ Span ] {
-      def write( v: Span, out: DataOutput ) { v.write( out )}
-      def read( in: DataInput ) : Span = Span.read( in )
-   }
+  implicit object serializer extends ImmutableSerializer[Span] {
+    def write(v: Span, out: DataOutput): Unit = v.write(out)
+
+    def read(in: DataInput): Span = Span.read(in)
+  }
 
   def read(in: DataInput): Span = {
     val cookie = in.readByte()
-    require(cookie == 0, "Unexpected cookie " + cookie)
+    if (cookie != 0) sys.error(s"Unexpected cookie $cookie")
     Span(in.readLong(), in.readLong())
   }
 
@@ -58,16 +59,13 @@ object Span {
   sealed trait HasStopOrVoid    extends SpanLike { def nonEmptyOption: Option[HasStop]    }
   sealed trait SpanOrVoid       extends HasStartOrVoid with HasStopOrVoid {
 
-    /**
-     * The span's length. For a void span, this is zero, otherwise it is
-     * `stop - start`.
-     */
+    /** The span's length. For a void span, this is zero, otherwise it is `stop - start`. */
     def length: Long
 
     def shift    (delta: Long)    : SpanOrVoid
     def intersect(that: SpanLike) : SpanOrVoid
     def subtract (that: Span.Open): SpanOrVoid
-    def subtract (that: SpanLike) : IIdxSeq[SpanOrVoid]
+    def subtract (that: SpanLike) : Vec[SpanOrVoid]
 
     def nonEmptyOption: Option[Span]
   }
@@ -77,9 +75,7 @@ object Span {
   }
 
   sealed trait HasStart extends Bounded with HasStartOrVoid {
-    /**
-     * @return  the start position of the span. this is considered included in the interval
-     */
+    /** @return  the start position of the span. this is considered included in the interval */
     def start: Long
 
     def shift(delta: Long): HasStart
@@ -88,7 +84,7 @@ object Span {
 
     def intersect(that: SpanLike) : HasStartOrVoid
     def subtract (that: Span.Open): HasStartOrVoid
-    def subtract (that: SpanLike) : IIdxSeq[HasStart]
+    def subtract (that: SpanLike) : Vec[HasStart]
   }
 
   object HasStop {
@@ -96,9 +92,7 @@ object Span {
   }
 
   sealed trait HasStop extends Bounded with HasStopOrVoid {
-    /**
-     * @return  the stop position of the span. this is considered excluded in the interval
-     */
+    /** @return  the stop position of the span. this is considered excluded in the interval */
     def stop: Long
 
     def shift(delta: Long): HasStop
@@ -116,225 +110,245 @@ object Span {
   }
 
   case object All extends FromOrAll with UntilOrAll {
-      def nonEmptyOption : Option[ All.type ] = Some( this )
+    def nonEmptyOption: Option[All.type] = Some(this)
 
-      def shift( delta: Long ) : All.type = this
-      def union( that: SpanLike ) : All.type = this
-      def intersect( that: SpanLike ) : SpanLike = that
-      def clip( pos: Long ) : Long = pos
-      def invert : Void.type = Void
+    def shift(delta: Long): All.type = this
 
-      def compareStart( pos: Long )    = -1
-      def compareStop(  pos: Long )    = 1
-      def contains( pos: Long )        = true
-      def contains( that: SpanLike )   = that != Void
-      def overlaps( that: SpanLike )   = that match {
-         case sp: Span  => sp.nonEmpty
-         case Void      => false
-         case _         => true
-      }
-      def touches( that: SpanLike )    = that != Void
+    def union(that: SpanLike): All.type = this
 
-      def subtract( that: Span.Open ) : SpanLike = that.invert
-      def subtract( that: SpanLike ) : IIdxSeq[ SpanLike ] = that match {
-         case Span( start, stop )   => IIdxSeq( Until( start ), From( stop ))
-         case From( start )         => IIdxSeq( Until( start ))
-         case Until( stop )         => IIdxSeq( From( stop ))
-         case All                   => IIdxSeq.empty
-         case Void                  => IIdxSeq( this )
-      }
+    def intersect(that: SpanLike): SpanLike = that
 
-      def write( out: DataOutput ) {
-         out.writeByte( 3 )
-      }
-   }
-   final case class From( start: Long ) extends FromOrAll with HasStart {
-      def nonEmptyOption : Option[ From ] = Some( this )
+    def clip(pos: Long): Long = pos
 
-      def clip( pos: Long ) : Long = math.max( start, pos )
-      def shift( delta: Long ) : From = From( start + delta )
-      def invert : Until = Until( start )
-   
-      def compareStop(  pos: Long )    = 1
-      def contains( pos: Long ) : Boolean = pos >= start
-   
-      def contains( that: SpanLike ) : Boolean = that match {
-         case From( thatStart )     => thatStart >= start
-         case Span( thatStart, _ )  => thatStart >= start
-         case _                     => false
-      }
-   
-      def overlaps( that: SpanLike ) : Boolean = that match {
-         case From( _ )             => true
-         case Until( thatStop )     => start < thatStop
-         case Span( _, thatStop )   => start < thatStop
-         case Void                  => false
-         case All                   => true
-      }
-   
-      def touches( that: SpanLike ) : Boolean = that match {
-         case From( _ )             => true
-         case Until( thatStop )     => start <= thatStop
-         case Span( _, thatStop )   => start <= thatStop
-         case Void                  => false
-         case All                   => true
-      }
-   
-      def union( that: SpanLike ) : FromOrAll = that match {
-         case From( thatStart )     => From( math.min( start, thatStart ))
-         case Span( thatStart, _ )  => From( math.min( start, thatStart ))
-         case Void                  => this
-         case _                     => All
-      }
-   
-      def intersect( that: SpanLike ) : HasStartOrVoid = that match {
-         case From( thatStart ) => From( math.max( start, thatStart ))
-         case Until( thatStop ) => if( start <= thatStop ) Span( start, thatStop ) else Void
-         case Span( thatStart, thatStop ) =>
-            val maxStart = math.max( start, thatStart )
-            if( maxStart <= thatStop ) Span( maxStart, thatStop ) else Void
-         case Void  => Void
-         case All   => this
-      }
+    def invert: Void.type = Void
 
-      def subtract( that: Span.Open ) : HasStartOrVoid = that match {
-         case Span.From( thatStart ) =>
-            if( thatStart >= start ) Span( start, thatStart ) else Span.Void
-         case Span.Until( thatStop ) if thatStop > start => From( thatStop )
-         case Span.All   => Span.Void
-         case _          => this
-      }
+    def compareStart(pos: Long) = -1
+    def compareStop (pos: Long) = 1
 
-      def subtract( that: SpanLike ) : IIdxSeq[ HasStart ] = that match {
-         case Span.From( thatStart ) =>
-            if( thatStart > start ) IIdxSeq( Span( start, thatStart )) else IIdxSeq.empty
-         case Span.Until( thatStop ) if thatStop > start => IIdxSeq( From( thatStop ))
-         case Span( thatStart, thatStop ) if thatStop > start =>
-            if( thatStart <= start ) {
-               IIdxSeq( From( thatStop ))
-            } else {
-               IIdxSeq( Span( start, thatStart ), From( thatStop ))
-            }
-         case Span.All   => IIdxSeq.empty
-         case _          => IIdxSeq( this )
-      }
+    def contains(pos: Long) = true
 
-      def write( out: DataOutput ) {
-         out.writeByte( 1 )
-         out.writeLong( start )
-      }
-   }
-   final case class Until( stop: Long ) extends UntilOrAll with HasStop {
-      def nonEmptyOption : Option[ Until ] = Some( this )
+    def contains(that: SpanLike) = that != Void
 
-      def clip( pos: Long ) : Long = math.min( stop, pos )
-      def shift( delta: Long ) : Until = Until( stop + delta )
-      def invert : From = From( stop )
-   
-      def compareStart( pos: Long )    = -1
-      def contains( pos: Long ) : Boolean = pos < stop
-   
-      def contains( that: SpanLike ) : Boolean = that match {
-         case Until( thatStop )     => thatStop <= stop
-         case Span( _, thatStop )   => thatStop <= stop
-         case _                     => false
-      }
-   
-      def overlaps( that: SpanLike ) : Boolean = that match {
-         case Until( _ )            => true
-         case From( thatStart )     => thatStart < stop
-         case Span( thatStart, _ )  => thatStart < stop
-         case Void                  => false
-         case All                   => true
-      }
-   
-      def touches( that: SpanLike ) : Boolean = that match {
-         case Until( _ )            => true
-         case From( thatStart )     => thatStart <= stop
-         case Span( thatStart, _ )  => thatStart <= stop
-         case Void                  => false
-         case All                   => true
-      }
-   
-      def union( that: SpanLike ) : UntilOrAll = that match {
-         case Until( thatStop )     => Until( math.max( stop, thatStop ))
-         case Span( _, thatStop )   => Until( math.max( stop, thatStop ))
-         case Void                  => this
-         case _                     => All
-      }
-   
-      def intersect( that: SpanLike ) : HasStopOrVoid = that match {
-         case From( thatStart ) => if( thatStart <= stop ) Span( thatStart, stop ) else Void
-         case Until( thatStop ) => Until( math.min( stop, thatStop ))
-         case Span( thatStart, thatStop ) =>
-            val minStop = math.min( stop, thatStop )
-            if( thatStart <= minStop ) Span( thatStart, minStop ) else Void
-         case Void  => Void
-         case All   => this
-      }
+    def overlaps(that: SpanLike) = that match {
+      case sp: Span => sp.nonEmpty
+      case Void     => false
+      case _        => true
+    }
 
-      def subtract( that: Span.Open ) : HasStopOrVoid = that match {
-         case Span.From( thatStart ) if thatStart < stop => Until( thatStart )
-         case Span.Until( thatStop ) =>
-            if( thatStop <= stop ) Span( thatStop, stop ) else Span.Void
-         case Span.All   => Span.Void
-         case _          => this
-      }
+    def touches(that: SpanLike) = that != Void
 
-      def subtract( that: SpanLike ) : IIdxSeq[ HasStop ] = that match {
-         case Span.From( thatStart ) if thatStart < stop => IIdxSeq( Until( thatStart ))
-         case Span.Until( thatStop ) =>
-            if( thatStop < stop ) IIdxSeq( Span( thatStop, stop )) else IIdxSeq.empty
-         case Span( thatStart, thatStop ) if thatStart < stop =>
-            if( thatStop >= stop ) {
-               IIdxSeq( Until( thatStart ))
-            } else {
-               IIdxSeq( Until( thatStart ), Span( thatStop, stop ))
-            }
-         case Span.All   => IIdxSeq.empty
-         case _          => IIdxSeq( this )
-      }
+    def subtract(that: Span.Open): SpanLike = that.invert
 
-      def write( out: DataOutput ) {
-         out.writeByte( 2 )
-         out.writeLong( stop )
-      }
-   }
-   case object Void extends SpanOrVoid {
-      final val length = 0L
+    def subtract(that: SpanLike): Vec[SpanLike] = that match {
+      case Span(start, stop)  => Vec(Until(start), From(stop))
+      case From(start)        => Vec(Until(start))
+      case Until(stop)        => Vec(From(stop))
+      case All                => Vec.empty
+      case Void               => Vec(this)
+    }
 
-      def nonEmptyOption : Option[ Span ] = None
+    def write(out: DataOutput): Unit = out.writeByte(3)
+  }
 
-      def shift( delta: Long ) : Void.type = this
-      def union( that: SpanLike ) : SpanLike = that
-      def invert : All.type = All
+  final case class From(start: Long) extends FromOrAll with HasStart {
+    def nonEmptyOption: Option[From] = Some(this)
 
-      def intersect( that: SpanLike ) : Void.type = this
-      def subtract( that: Span.Open ) : Void.type = this
-      def subtract( that: SpanLike ) : IIdxSeq[ SpanOrVoid ] = IIdxSeq.empty
-      def clip( pos: Long ) : Long = pos
-   
-      def compareStart( pos: Long )    = 1
-      def compareStop(  pos: Long )    = -1
-      def contains( pos: Long )        = false
-      def contains( that: SpanLike )   = false
-      def overlaps( that: SpanLike )   = false
-      def touches( that: SpanLike )    = false
-   
-      val isEmpty    = true
-      val nonEmpty   = false
+    def clip(pos: Long): Long = math.max(start, pos)
 
-      def write( out: DataOutput ) {
-         out.writeByte( 4 )
-      }
-   }
+    def shift(delta: Long): From = From(start + delta)
+
+    def invert: Until = Until(start)
+
+    def compareStop(pos: Long) = 1
+
+    def contains(pos: Long): Boolean = pos >= start
+
+    def contains(that: SpanLike): Boolean = that match {
+      case From(thatStart)    => thatStart >= start
+      case Span(thatStart, _) => thatStart >= start
+      case _ => false
+    }
+
+    def overlaps(that: SpanLike): Boolean = that match {
+      case From(_)            => true
+      case Until(thatStop)    => start < thatStop
+      case Span(_, thatStop)  => start < thatStop
+      case Void               => false
+      case All                => true
+    }
+
+    def touches(that: SpanLike): Boolean = that match {
+      case From(_)            => true
+      case Until(thatStop)    => start <= thatStop
+      case Span(_, thatStop)  => start <= thatStop
+      case Void               => false
+      case All                => true
+    }
+
+    def union(that: SpanLike): FromOrAll = that match {
+      case From(thatStart)    => From(math.min(start, thatStart))
+      case Span(thatStart, _) => From(math.min(start, thatStart))
+      case Void               => this
+      case _                  => All
+    }
+
+    def intersect(that: SpanLike): HasStartOrVoid = that match {
+      case From(thatStart) => From(math.max(start, thatStart))
+      case Until(thatStop) => if (start <= thatStop) Span(start, thatStop) else Void
+      case Span(thatStart, thatStop) =>
+        val maxStart = math.max(start, thatStart)
+        if (maxStart <= thatStop) Span(maxStart, thatStop) else Void
+      case Void => Void
+      case All  => this
+    }
+
+    def subtract(that: Span.Open): HasStartOrVoid = that match {
+      case Span.From(thatStart) =>
+        if (thatStart >= start) Span(start, thatStart) else Span.Void
+      case Span.Until(thatStop) if thatStop > start => From(thatStop)
+      case Span.All => Span.Void
+      case _        => this
+    }
+
+    def subtract(that: SpanLike): Vec[HasStart] = that match {
+      case Span.From(thatStart) =>
+        if (thatStart > start) Vec(Span(start, thatStart)) else Vec.empty
+      case Span.Until(thatStop) if thatStop > start => Vec(From(thatStop))
+      case Span(thatStart, thatStop) if thatStop > start =>
+        if (thatStart <= start) {
+          Vec(From(thatStop))
+        } else {
+          Vec(Span(start, thatStart), From(thatStop))
+        }
+      case Span.All => Vec.empty
+      case _        => Vec(this)
+    }
+
+    def write(out: DataOutput): Unit = {
+      out.writeByte(1)
+      out.writeLong(start)
+    }
+  }
+
+  final case class Until(stop: Long) extends UntilOrAll with HasStop {
+    def nonEmptyOption: Option[Until] = Some(this)
+
+    def clip(pos: Long): Long = math.min(stop, pos)
+
+    def shift(delta: Long): Until = Until(stop + delta)
+
+    def invert: From = From(stop)
+
+    def compareStart(pos: Long) = -1
+
+    def contains(pos: Long): Boolean = pos < stop
+
+    def contains(that: SpanLike): Boolean = that match {
+      case Until(thatStop)    => thatStop <= stop
+      case Span(_, thatStop)  => thatStop <= stop
+      case _                  => false
+    }
+
+    def overlaps(that: SpanLike): Boolean = that match {
+      case Until(_)           => true
+      case From(thatStart)    => thatStart < stop
+      case Span(thatStart, _) => thatStart < stop
+      case Void               => false
+      case All                => true
+    }
+
+    def touches(that: SpanLike): Boolean = that match {
+      case Until(_)           => true
+      case From(thatStart)    => thatStart <= stop
+      case Span(thatStart, _) => thatStart <= stop
+      case Void               => false
+      case All                => true
+    }
+
+    def union(that: SpanLike): UntilOrAll = that match {
+      case Until(thatStop)    => Until(math.max(stop, thatStop))
+      case Span(_, thatStop)  => Until(math.max(stop, thatStop))
+      case Void               => this
+      case _                  => All
+    }
+
+    def intersect(that: SpanLike): HasStopOrVoid = that match {
+      case From(thatStart) => if (thatStart <= stop) Span(thatStart, stop) else Void
+      case Until(thatStop) => Until(math.min(stop, thatStop))
+      case Span(thatStart, thatStop) =>
+        val minStop = math.min(stop, thatStop)
+        if (thatStart <= minStop) Span(thatStart, minStop) else Void
+      case Void => Void
+      case All  => this
+    }
+
+    def subtract(that: Span.Open): HasStopOrVoid = that match {
+      case Span.From(thatStart) if thatStart < stop => Until(thatStart)
+      case Span.Until(thatStop) =>
+        if (thatStop <= stop) Span(thatStop, stop) else Span.Void
+      case Span.All => Span.Void
+      case _        => this
+    }
+
+    def subtract(that: SpanLike): Vec[HasStop] = that match {
+      case Span.From(thatStart) if thatStart < stop => Vec(Until(thatStart))
+      case Span.Until(thatStop) =>
+        if (thatStop < stop) Vec(Span(thatStop, stop)) else Vec.empty
+      case Span(thatStart, thatStop) if thatStart < stop =>
+        if (thatStop >= stop) {
+          Vec(Until(thatStart))
+        } else {
+          Vec(Until(thatStart), Span(thatStop, stop))
+        }
+      case Span.All => Vec.empty
+      case _        => Vec(this)
+    }
+
+    def write(out: DataOutput): Unit = {
+      out.writeByte(2)
+      out.writeLong(stop)
+    }
+  }
+
+  case object Void extends SpanOrVoid {
+    final val length = 0L
+
+    def nonEmptyOption: Option[Span] = None
+
+    def shift(delta: Long): Void.type = this
+
+    def union(that: SpanLike): SpanLike = that
+
+    def invert: All.type = All
+
+    def intersect(that: SpanLike ): Void.type = this
+    def subtract (that: Span.Open): Void.type = this
+
+    def subtract(that: SpanLike): Vec[SpanOrVoid] = Vec.empty
+
+    def clip(pos: Long): Long = pos
+
+    def compareStart(pos: Long) = 1
+    def compareStop (pos: Long) = -1
+
+    def contains(pos: Long) = false
+
+    def contains(that: SpanLike) = false
+    def overlaps(that: SpanLike) = false
+    def touches (that: SpanLike) = false
+
+    val isEmpty  = true
+    val nonEmpty = false
+
+    def write(out: DataOutput): Unit = out.writeByte(4)
+  }
 
   private final case class Apply(start: Long, stop: Long) extends Span {
-    if (start > stop) throw new IllegalArgumentException("A span's start (" + start + ") must be <= its stop (" + stop + ")")
+    if (start > stop) throw new IllegalArgumentException(s"A span's start ($start) must be <= its stop ($stop)")
 
     def nonEmptyOption: Option[Span] = if (start < stop) Some(this) else None
 
-    override def toString = "Span(" + start + "," + stop + ")"
+    override def toString = s"Span($start,$stop)"
 
     def length: Long = stop - start
 
@@ -410,43 +424,40 @@ object Span {
     def subtract(that: Span.Open): Span.SpanOrVoid = that match {
       case Span.From(thatStart) if thatStart < stop =>
         if (thatStart >= start) Span(start, thatStart) else Span.Void
-      case Span.Until(thatStop) if (thatStop > start) =>
+      case Span.Until(thatStop) if thatStop > start =>
         if (thatStop <= stop) Span(thatStop, stop) else Span.Void
       case Span.All => Span.Void
       case _        => this
     }
 
-    def subtract(that: SpanLike): IIdxSeq[Span] = that match {
+    def subtract(that: SpanLike): Vec[Span] = that match {
       case Span.From(thatStart) if thatStart < stop =>
-        if (thatStart > start) Vector(Span(start, thatStart)) else IIdxSeq.empty
-      case Span.Until(thatStop) if (thatStop > start) =>
-        if (thatStop < stop) Vector(Span(thatStop, stop)) else IIdxSeq.empty
+        if (thatStart > start) Vector(Span(start, thatStart)) else Vec.empty
+      case Span.Until(thatStop) if thatStop > start =>
+        if (thatStop < stop) Vector(Span(thatStop, stop)) else Vec.empty
       case Span(thatStart, thatStop) if thatStart < stop && thatStop > start =>
         if (thatStart <= start) {
-          if (thatStop < stop) Vector(Span(thatStop, stop)) else IIdxSeq.empty
+          if (thatStop < stop) Vector(Span(thatStop, stop)) else Vec.empty
         } else if (thatStop >= stop) {
           Vector(Span(start, thatStart))
         } else {
           Vector(Span(start, thatStart), Span(thatStop, stop))
         }
       case Span.All => Vector.empty
-      case _ => if (isEmpty) Vector.empty else Vector(this)
+      case _        => if (isEmpty) Vector.empty else Vector(this)
     }
 
-    def write(out: DataOutput) {
+    def write(out: DataOutput): Unit = {
       out.writeByte(0)
       out.writeLong(start)
       out.writeLong(stop)
     }
   }
-
 }
 
 object SpanLike {
   implicit object serializer extends ImmutableSerializer[SpanLike] {
-    def write(v: SpanLike, out: DataOutput) {
-      v.write(out)
-    }
+    def write(v: SpanLike, out: DataOutput): Unit = v.write(out)
 
     def read(in: DataInput): SpanLike = SpanLike.read(in)
   }
@@ -457,154 +468,138 @@ object SpanLike {
     case 2 => Span.until(in.readLong())
     case 3 => Span.All
     case 4 => Span.Void
-    case cookie => sys.error("Unrecognized cookie " + cookie)
+    case cookie => sys.error(s"Unrecognized cookie $cookie")
   }
 }
 
 sealed trait SpanLike extends Writable {
-  /**
-   * Clips a position to this span's boundary. Note that
-   * the span's stop position is included. Thus the result
-   * is greater than or equal the start, and less than or equal (!)
-   * the stop.
-   *
-   * For the special cases of `Span.All` and `Span.Void`, this
-   * method returns the argument unchanged.
-   *
-   * @param pos  the point to clip
-   * @return     the clipped point
-   */
+  /** Clips a position to this span's boundary. Note that
+    * the span's stop position is included. Thus the result
+    * is greater than or equal the start, and less than or equal (!)
+    * the stop.
+    *
+    * For the special cases of `Span.All` and `Span.Void`, this
+    * method returns the argument unchanged.
+    *
+    * @param pos  the point to clip
+    * @return     the clipped point
+    */
   def clip(pos: Long): Long
 
-  /**
-   * Shifts the span, that is applies an offset to its start and stop.
-   * For single sided open spans (`Span.From` and `Span.Until`) this
-   * alters the only bounded value. For `Span.All` and `Span.Void`
-   * this returns the object unchanged.
-   *
-   * @param delta   the shift amount (the amount to be added to the span's positions)
-   * @return  the shifted span
-   */
+  /** Shifts the span, that is applies an offset to its start and stop.
+    * For single sided open spans (`Span.From` and `Span.Until`) this
+    * alters the only bounded value. For `Span.All` and `Span.Void`
+    * this returns the object unchanged.
+    *
+    * @param delta   the shift amount (the amount to be added to the span's positions)
+    * @return  the shifted span
+    */
   def shift(delta: Long): SpanLike
 
-  /**
-   * Checks if the span is empty. A span is empty if it is
-   * a `Span` with `start == stop` or if it is void.
-   *
-   * @return		<code>true</code>, if <code>start == stop</code>
-   */
+  /** Checks if the span is empty. A span is empty if it is
+    * a `Span` with `start == stop` or if it is void.
+    *
+    * @return		<code>true</code>, if <code>start == stop</code>
+    */
   def isEmpty: Boolean
 
-  /**
-   * Checks if the span is non empty. This is exactly the opposite
-   * value of `isEmpty`.
-   */
+  /** Checks if the span is non empty. This is exactly the opposite value of `isEmpty`. */
   def nonEmpty: Boolean
 
-  /**
-   * Checks if a position lies within the span. Note that this returns
-   * `false` if `this.stop == pos`.
-   *
-   * @return		<code>true</code>, if <code>start <= pos < stop</code>
-   */
+  /** Checks if a position lies within the span. Note that this returns
+    * `false` if `this.stop == pos`.
+    *
+    * @return		<code>true</code>, if <code>start <= pos < stop</code>
+    */
   def contains(pos: Long): Boolean
 
-  /**
-   * Compares the span's start to a given position
-   *
-   * @return		<code>-1</code>, if the span start lies before the query position,
-   *            <code>1</code>, if it lies after that position, or
-   *            <code>0</code>, if both are the same
-   */
+  /** Compares the span's start to a given position
+    *
+    * @return		<code>-1</code>, if the span start lies before the query position,
+    *            <code>1</code>, if it lies after that position, or
+    *            <code>0</code>, if both are the same
+    */
   def compareStart(pos: Long): Int
 
-  /**
-   * Compares the span's stop to a given position
-   *
-   * @return		<code>-1</code>, if the span stop lies before the query position,
-   *            <code>1</code>, if it lies after that position, or
-   *            <code>0</code>, if both are the same
-   */
+  /** Compares the span's stop to a given position
+    *
+    * @return		<code>-1</code>, if the span stop lies before the query position,
+    *            <code>1</code>, if it lies after that position, or
+    *            <code>0</code>, if both are the same
+    */
   def compareStop(pos: Long): Int
 
-  /**
-   * Checks if another span lies within the span. The result is `false`
-   * if either of the two spans is void.
-   *
-   * @param	that	second span
-   * @return		`true`, if `that.start >= this.span && that.stop <= this.stop`
-   */
+  /** Checks if another span lies within the span. The result is `false`
+    * if either of the two spans is void.
+    *
+    * @param	that	second span
+    * @return		`true`, if `that.start >= this.span && that.stop <= this.stop`
+    */
   def contains(that: SpanLike): Boolean
 
-  /**
-   * Checks if a two spans overlap each other. Two spans overlap if the overlapping area
-   * is greater than or equal to 1. This implies that if either span is empty, the result
-   * will be `false`.
-   *
-   * This method is commutative (`a overlaps b == b overlaps a`).
-   *
-   * @param	that	second span
-   * @return		<code>true</code>, if the spans
-   *            overlap each other
-   */
+  /** Checks if a two spans overlap each other. Two spans overlap if the overlapping area
+    * is greater than or equal to 1. This implies that if either span is empty, the result
+    * will be `false`.
+    *
+    * This method is commutative (`a overlaps b == b overlaps a`).
+    *
+    * @param	that	second span
+    * @return		<code>true</code>, if the spans
+    *            overlap each other
+    */
   def overlaps(that: SpanLike): Boolean
 
-  /**
-   * Checks if a two spans overlap or touch each other. Two spans touch each other if
-   * they either overlap or they share a common point with each other (this span's start or stop
-   * is that span's start or stop).
-   *
-   * This method is commutative (`a touches b == b touches a`).
-   *
-   * @param	that	second span
-   * @return	`true`, if the spans touch each other
-   */
+  /** Checks if a two spans overlap or touch each other. Two spans touch each other if
+    * they either overlap or they share a common point with each other (this span's start or stop
+    * is that span's start or stop).
+    *
+    * This method is commutative (`a touches b == b touches a`).
+    *
+    * @param	that	second span
+    * @return	`true`, if the spans touch each other
+    */
   def touches(that: SpanLike): Boolean
 
-  /**
-   * Constructs a single span which contains both `this` and `that` span. If the two spans
-   * are disjoint, the result will be a span with `start = min(this.start, that.start)` and
-   * `stop = max(this.stop, that.stop)`. If either span is void, the other span is returned.
-   * If either span is `Span.All`, `Span.All` will be returned.
-   *
-   * This method is commutative (`a union b == b union a`).
-   *
-   * @param that the span to form the union with
-   * @return  the encompassing span
-   */
+  /** Constructs a single span which contains both `this` and `that` span. If the two spans
+    * are disjoint, the result will be a span with `start = min(this.start, that.start)` and
+    * `stop = max(this.stop, that.stop)`. If either span is void, the other span is returned.
+    * If either span is `Span.All`, `Span.All` will be returned.
+    *
+    * This method is commutative (`a union b == b union a`).
+    *
+    * @param that the span to form the union with
+    * @return  the encompassing span
+    */
   def union(that: SpanLike): SpanLike
 
-  /**
-   * Construct the intersection between this and another span. If the two spans are
-   * disjoint, the result will be empty. An empty result may be a `Span` if the two spans
-   * touched each other, or `Span.Void` if they did not touch each other. If either span is
-   * `Span.All`, the other span is returned. If either span is void, `Span.Void` will be
-   * returned.
-   *
-   * This method is commutative (`a intersect b == b intersect a`).
-   *
-   * @param that the span to form the intersection with
-   * @return  the intersection span (possibly empty)
-   */
+  /** Construct the intersection between this and another span. If the two spans are
+    * disjoint, the result will be empty. An empty result may be a `Span` if the two spans
+    * touched each other, or `Span.Void` if they did not touch each other. If either span is
+    * `Span.All`, the other span is returned. If either span is void, `Span.Void` will be
+    * returned.
+    *
+    * This method is commutative (`a intersect b == b intersect a`).
+    *
+    * @param that the span to form the intersection with
+    * @return  the intersection span (possibly empty)
+    */
   def intersect(that: SpanLike): SpanLike
 
-  /**
-   * Subtracts a given span from this span. Note that an empty span argument "cuts" this span,
-   * e.g. `Span.all subtract Span(30,30) == Seq(Span.until(30),Span.from(30))`
-   *
-   * @param that the span to subtract
-   * @return  a collection of spans after the argument was subtracted. Unlike `intersect`, this method
-   *          filters out empty spans, thus a span subtracted from itself produces an empty collection.
-   *          if `that` is a `Span`, the result might be two disjoint spans.
-   */
-  def subtract(that: SpanLike): IIdxSeq[SpanLike]
+  /** Subtracts a given span from this span. Note that an empty span argument "cuts" this span,
+    * e.g. `Span.all subtract Span(30,30) == Seq(Span.until(30),Span.from(30))`
+    *
+    * @param that the span to subtract
+    * @return  a collection of spans after the argument was subtracted. Unlike `intersect`, this method
+    *          filters out empty spans, thus a span subtracted from itself produces an empty collection.
+    *          if `that` is a `Span`, the result might be two disjoint spans.
+    */
+  def subtract(that: SpanLike): Vec[SpanLike]
 
-  /**
-   * Substracts a given open span from this span.
-   *
-   * @param that the span to subtract
-   * @return the reduced span, possibly empty or void
-   */
+  /** Subtracts a given open span from this span.
+    *
+    * @param that the span to subtract
+    * @return the reduced span, possibly empty or void
+    */
   def subtract(that: Span.Open): SpanLike
 
   def nonEmptyOption: Option[Span.NonVoid]
@@ -617,7 +612,7 @@ sealed trait Span extends Span.SpanOrVoid with Span.HasStart with Span.HasStop {
 
   def subtract(that: Span.Open): Span.SpanOrVoid
 
-  def subtract(that: SpanLike): IIdxSeq[Span]
+  def subtract(that: SpanLike): Vec[Span]
 
   def union(that: Span): Span
 }

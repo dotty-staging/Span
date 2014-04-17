@@ -1,24 +1,26 @@
-name         := "Span"
+name               := "Span"
 
-version      := "1.2.1-SNAPSHOT"
+version            := "1.2.1"
 
-organization := "de.sciss"
+organization       := "de.sciss"
 
-scalaVersion := "2.11.0-RC3"
+scalaVersion       := "2.11.0"
 
-crossScalaVersions := Seq("2.11.0-RC3", "2.10.3")
+crossScalaVersions := Seq("2.11.0", "2.10.4")
 
-description  := "A simple data type for describing sample frame intervals"
+description        := "A simple data type for describing sample frame intervals"
 
-homepage     := Some(url("https://github.com/Sciss/" + name.value))
+homepage           := Some(url("https://github.com/Sciss/" + name.value))
 
-licenses     := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
+licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
 
 initialCommands in console := """import de.sciss.span._"""
 
+scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
+
 libraryDependencies in ThisBuild ++= Seq(
-  "de.sciss"      %% "serial"    % "1.0.2+",
-  "org.scalatest" %% "scalatest" % "2.1.2" % "test"
+  "de.sciss"      %% "serial"    % "1.0.2",
+  "org.scalatest" %% "scalatest" % "2.1.3" % "test"
 )
 
 // retrieveManaged := true

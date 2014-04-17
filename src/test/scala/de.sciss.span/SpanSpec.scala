@@ -1,14 +1,14 @@
 package de.sciss.span
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
-import collection.immutable.{IndexedSeq => IIdxSeq}
 
-/**
- * To run only this suite:
- *
- * test-only de.sciss.span.SpanSpec
+import org.scalatest.{Matchers, FlatSpec}
+import collection.immutable.{IndexedSeq => Vec}
+
+/*
+  To run only this suite:
+ 
+  test-only de.sciss.span.SpanSpec
  */
-class SpanSpec extends FlatSpec with ShouldMatchers {
+class SpanSpec extends FlatSpec with Matchers {
    val span1   = Span( 30, 40 )
    val span2   = Span( 40, 50 )
    val span3   = Span( 40, 40 )
@@ -23,7 +23,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
    val spans   = Vector( span1, span2, span3 )
    val open    = Vector( sfrom, suntl, salle )
    val sseqi   = sseq.zipWithIndex
-   val sseq2   = sseq ++ IIdxSeq( span4, span5, span6 )
+   val sseq2   = sseq ++ Vec( span4, span5, span6 )
    val pos     = Vector( 25, 30, 35, 40, 45, 50, 55 )
    val shifts  = Vector( -3, 0, 3 )
 
@@ -40,7 +40,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
       false, false, true,  false, false, false, false, false, true,  false,   // span5
       false, false, false, false, false, false, false, false, false, true     // span6
    )
-   val mover   = IIdxSeq(
+   val mover   = Vec(
    // span1  span2  span3  sfrom  suntl  salle  svoid  span4  span5  span6
       true,  false, false, false, true,  true,  false, true,  true,  true,    // span1
       false, true,  false, true,  false, true,  false, true,  true,  false,   // span2
@@ -53,7 +53,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
       true,  true,  false, true,  true,  true,  false, true,  true,  true,    // span5
       true,  false, false, false, true,  true,  false, true,  true,  true     // span6
    )
-   val mtouch  = IIdxSeq(
+   val mtouch  = Vec(
    // span1  span2  span3  sfrom  suntl  salle  svoid  span4  span5  span6
       true,  true,  true,  true,  true,  true,  false, true,  true,  true,    // span1
       true,  true,  true,  true,  true,  true,  false, true,  true,  false,   // span2
@@ -77,7 +77,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
    val span9  = Span(35,50)
    val span10 = Span(31,45)
    val span11 = Span(31,50)
-   val munion = IIdxSeq(
+   val munion = Vec(
    // span1   span2   span3   sfrom   suntl   salle  svoid  span4   span5   span6
       span1,  span4,  span1,  from30, suntl,  salle, span1, span4,  span7,  span1,     // span1
       span4,  span2,  span2,  sfrom,  untl50, salle, span2, span4,  span9,  span11,    // span2
@@ -94,7 +94,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
    val span12 = Span(35,40)
    val span13 = Span(40,45)
    val span14 = Span(35,39)
-   val msect = IIdxSeq(
+   val msect = Vec(
    // span1   span2   span3   sfrom   suntl   salle  svoid  span4   span5   span6
       span1,  span3,  span3,  span3,  span1,  span1, svoid, span1,  span12, span6,     // span1
       span3,  span2,  span3,  span2,  span3,  span2, svoid, span2,  span13, svoid,     // span2
@@ -108,7 +108,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
       span6,  svoid,  svoid,  svoid,  span6,  span6, svoid, span6,  span14, span6      // span6
    )
 
-   val msub1 = IIdxSeq(
+   val msub1 = Vec(
    // sfrom   suntl   salle
       span1,  span3,  svoid,  // span1
       span3,  span2,  svoid,  // span2
@@ -135,7 +135,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
    val untl30 = Span.until(30)
    val untl31 = Span.until(31)
    val untl35 = Span.until(35)
-   val msub2 = IIdxSeq(
+   val msub2 = Vec(
    // span1              span2              span3               sfrom        suntl        salle  svoid       span4               span5               span6
       Nil,               Seq(span1),        Seq(span1),         Seq(span1),  Nil,         Nil,   Seq(span1), Nil,                Seq(span15),        Seq(span16,span17), // span1
       Seq(span2),        Nil,               Seq(span2),         Nil,         Seq(span2),  Nil,   Seq(span2), Nil,                Seq(span18),        Seq(span2),         // span2
@@ -155,7 +155,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
             if( idx1 == idx2 ) {
                s1 should equal (s2)
             } else {
-               s1 should not equal (s2)
+               s1 should not equal s2
             }
          }
       }
@@ -194,7 +194,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
             if( sp.contains( p ) || sp.stop == p ) {
                p should equal (cl)
             } else {
-               p should not equal (cl)
+               p should not equal cl
             }
          }
       }
@@ -212,7 +212,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
          if( sfrom.contains( p )) {
             p should equal (cl)
          } else {
-            p should not equal (cl)
+            p should not equal cl
          }
       }
       pos.foreach { p =>
@@ -221,7 +221,7 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
          if( suntl.contains( p ) || (suntl.stop == p) ) {
             p should equal (cl)
          } else {
-            p should not equal (cl)
+            p should not equal cl
          }
       }
    }
@@ -332,6 +332,6 @@ class SpanSpec extends FlatSpec with ShouldMatchers {
    }
 
    "A Span" should "throw an IllegalArgumentException if stop < start" in {
-     evaluating { Span( 40, 39 )} should produce [IllegalArgumentException]
+     an[IllegalArgumentException] should be thrownBy { Span(40, 39) }
    }
 }
