@@ -51,12 +51,28 @@ object Span {
     Span(in.readLong(), in.readLong())
   }
 
-  sealed trait NonVoid          extends SpanLike
-  sealed trait Bounded          extends NonVoid
-  sealed trait FromOrAll        extends Open     { def nonEmptyOption: Option[FromOrAll]  }
-  sealed trait HasStartOrVoid   extends SpanLike { def nonEmptyOption: Option[HasStart]   }
-  sealed trait UntilOrAll       extends Open     { def nonEmptyOption: Option[UntilOrAll] }
-  sealed trait HasStopOrVoid    extends SpanLike { def nonEmptyOption: Option[HasStop]    }
+  sealed trait NonVoid          extends SpanLike {
+    def shift    (delta: Long)    : NonVoid
+  }
+  sealed trait Bounded          extends NonVoid {
+    def shift    (delta: Long)    : Bounded
+  }
+  sealed trait FromOrAll        extends Open     {
+    def shift    (delta: Long)    : FromOrAll
+    def nonEmptyOption            : Option[FromOrAll]
+  }
+  sealed trait HasStartOrVoid   extends SpanLike {
+    def shift    (delta: Long)    : HasStartOrVoid
+    def nonEmptyOption            : Option[HasStart]
+  }
+  sealed trait UntilOrAll       extends Open     {
+    def shift    (delta: Long)    : UntilOrAll
+    def nonEmptyOption            : Option[UntilOrAll]
+  }
+  sealed trait HasStopOrVoid    extends SpanLike {
+    def shift    (delta: Long)    : HasStopOrVoid
+    def nonEmptyOption            : Option[HasStop]
+  }
   sealed trait SpanOrVoid       extends HasStartOrVoid with HasStopOrVoid {
 
     /** The span's length. For a void span, this is zero, otherwise it is `stop - start`. */

@@ -1,12 +1,12 @@
 name               := "Span"
 
-version            := "1.2.1"
+version            := "1.3.0-SNAPSHOT"
 
 organization       := "de.sciss"
 
-scalaVersion       := "2.11.0"
+scalaVersion       := "2.11.1"
 
-crossScalaVersions := Seq("2.11.0", "2.10.4")
+crossScalaVersions := Seq("2.11.1", "2.10.4")
 
 description        := "A simple data type for describing sample frame intervals"
 
@@ -20,7 +20,7 @@ scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
 
 libraryDependencies in ThisBuild ++= Seq(
   "de.sciss"      %% "serial"    % "1.0.2",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
 )
 
 // retrieveManaged := true
@@ -60,6 +60,6 @@ site.settings
 
 ghpages.settings
 
-git.remoteRepo := "git@github.com:Sciss/" + name.value + ".git"
+git.remoteRepo := s"git@github.com:Sciss/${name.value}.git"
 
 site.includeScaladoc()
