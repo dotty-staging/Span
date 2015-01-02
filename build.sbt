@@ -4,9 +4,9 @@ version            := "1.3.0-SNAPSHOT"
 
 organization       := "de.sciss"
 
-scalaVersion       := "2.11.1"
+scalaVersion       := "2.11.4"
 
-crossScalaVersions := Seq("2.11.1", "2.10.4")
+crossScalaVersions := Seq("2.11.4", "2.10.4")
 
 description        := "A simple data type for describing sample frame intervals"
 
@@ -16,21 +16,19 @@ licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl
 
 initialCommands in console := """import de.sciss.span._"""
 
-scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
+scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8")
 
 libraryDependencies in ThisBuild ++= Seq(
   "de.sciss"      %% "serial"    % "1.0.2",
-  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.3" % "test"
 )
-
-// retrieveManaged := true
 
 // ---- publishing ----
 
 publishMavenStyle := true
 
 publishTo :=
-  Some(if (version.value endsWith "-SNAPSHOT")
+  Some(if (isSnapshot.value)
     "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   else
     "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"

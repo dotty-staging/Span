@@ -2,7 +2,7 @@
  *  Span.scala
  *  (Span)
  *
- *  Copyright (c) 2013-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2013-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -25,9 +25,10 @@
 
 package de.sciss.span
 
-import annotation.switch
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput, Writable}
+import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer, Writable}
+
+import scala.annotation.switch
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object Span {
   def from (start: Long): From  = From (start)
@@ -549,7 +550,7 @@ sealed trait SpanLike extends Writable {
     * if either of the two spans is void.
     *
     * @param	that	second span
-    * @return		`true`, if `that.start >= this.span && that.stop <= this.stop`
+    * @return		`true`, if `that.start >= this.start && that.stop <= this.stop`
     */
   def contains(that: SpanLike): Boolean
 
