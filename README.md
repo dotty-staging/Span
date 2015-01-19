@@ -8,7 +8,7 @@ Span is a data type for representing sample frame intervals. It is (C)opyright 2
 
     libraryDependencies += "de.sciss" %% "span" % v
 
-The current stable version `v` is `"1.2.1"`
+The current stable version `v` is `"1.3.0"`
 
 ## building
 

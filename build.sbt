@@ -1,12 +1,12 @@
 name               := "Span"
 
-version            := "1.3.0-SNAPSHOT"
+version            := "1.3.0"
 
 organization       := "de.sciss"
 
-scalaVersion       := "2.11.4"
+scalaVersion       := "2.11.5"
 
-crossScalaVersions := Seq("2.11.4", "2.10.4")
+crossScalaVersions := Seq("2.11.5", "2.10.4")
 
 description        := "A simple data type for describing sample frame intervals"
 
