@@ -20,7 +20,7 @@ scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", 
 
 libraryDependencies in ThisBuild ++= Seq(
   "de.sciss"      %% "serial"    % "1.1.0-SNAPSHOT",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 )
 
 // ---- publishing ----
