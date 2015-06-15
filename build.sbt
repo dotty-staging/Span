@@ -1,6 +1,6 @@
 name               := "Span"
 
-version            := "1.4.0-SNAPSHOT"
+version            := "1.3.1"
 
 organization       := "de.sciss"
 
@@ -18,8 +18,8 @@ initialCommands in console := """import de.sciss.span._"""
 
 scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8")
 
-libraryDependencies in ThisBuild ++= Seq(
-  "de.sciss"      %% "serial"    % "1.1.0-SNAPSHOT",
+libraryDependencies ++= Seq(
+  "de.sciss"      %% "serial"    % "1.0.2",
   "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 )
 
