@@ -1,14 +1,14 @@
 lazy val baseName  = "Span"
 lazy val baseNameL = baseName.toLowerCase
 
-lazy val projectVersion = "1.3.2"
-lazy val mimaVersion    = "1.3.0"
+lazy val projectVersion = "1.3.3"
+lazy val mimaVersion    = "1.3.2"
 
 name               := baseName
 version            := projectVersion
 organization       := "de.sciss"
-scalaVersion       := "2.11.8"
-crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6")
+scalaVersion       := "2.12.3"
+crossScalaVersions := Seq("2.12.3", "2.11.11", "2.10.6")
 description        := "A simple data type for describing sample frame intervals"
 homepage           := Some(url(s"https://github.com/Sciss/${name.value}"))
 licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
@@ -21,7 +21,7 @@ scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", 
 
 libraryDependencies ++= Seq(
   "de.sciss"      %% "serial"    % "1.0.3",
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
 
 // ---- publishing ----
@@ -55,10 +55,6 @@ pomExtra := { val n = name.value
 
 // ---- ghpages ----
 
-site.settings
-
-ghpages.settings
+enablePlugins(GhpagesPlugin, SiteScaladocPlugin)
 
 git.remoteRepo := s"git@github.com:Sciss/${name.value}.git"
-
-site.includeScaladoc()

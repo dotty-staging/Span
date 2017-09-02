@@ -11,7 +11,7 @@ Span is a data type for representing sample frame intervals. It is (C)opyright 2
 
     libraryDependencies += "de.sciss" %% "span" % v
 
-The current stable version `v` is `"1.3.2"`
+The current stable version `v` is `"1.3.3"`
 
 ## building
 
@@ -19,4 +19,4 @@ This project builds against Scala 2.12, 2.11, 2.10, using sbt 0.13.
 
 ## documentation
 
- - Browse [online API documents](http://sciss.github.io/Span/latest/api/).
+ - Browse [online API documents](http://sciss.github.io/Span/latest/api/de/sciss/span/).
