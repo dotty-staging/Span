@@ -39,11 +39,14 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra := { val n = name.value
+/* this seems to be generated now automatically somewhere:
 <scm>
   <url>git@github.com:Sciss/{n}.git</url>
   <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
 </scm>
+*/
+
+pomExtra := { val n = name.value
 <developers>
    <developer>
       <id>sciss</id>
