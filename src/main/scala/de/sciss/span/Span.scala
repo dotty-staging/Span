@@ -97,7 +97,7 @@ object Span {
 
     def shift(delta: Long): HasStart
 
-    final def compareStart(pos: Long) = if (start < pos) -1 else if (start > pos) 1 else 0
+    final def compareStart(pos: Long): Int = if (start < pos) -1 else if (start > pos) 1 else 0
 
     def intersect(that: SpanLike) : HasStartOrVoid
     def subtract (that: Span.Open): HasStartOrVoid
@@ -114,7 +114,7 @@ object Span {
 
     def shift(delta: Long): HasStop
 
-    final def compareStop(pos: Long) = if (stop < pos) -1 else if (stop > pos) 1 else 0
+    final def compareStop(pos: Long): Int = if (stop < pos) -1 else if (stop > pos) 1 else 0
   }
 
   sealed trait Open extends NonVoid {
@@ -139,20 +139,20 @@ object Span {
 
     def invert: Void.type = Void
 
-    def compareStart(pos: Long) = -1
+    def compareStart(pos: Long): Int = -1
     def compareStop (pos: Long) = 1
 
     def contains(pos: Long) = true
 
-    def contains(that: SpanLike) = that != Void
+    def contains(that: SpanLike): Boolean = that != Void
 
-    def overlaps(that: SpanLike) = that match {
+    def overlaps(that: SpanLike): Boolean = that match {
       case sp: Span => sp.nonEmpty
       case Void     => false
       case _        => true
     }
 
-    def touches(that: SpanLike) = that != Void
+    def touches(that: SpanLike): Boolean = that != Void
 
     def subtract(that: Span.Open): SpanLike = that.invert
 
@@ -256,7 +256,7 @@ object Span {
 
     def invert: From = From(stop)
 
-    def compareStart(pos: Long) = -1
+    def compareStart(pos: Long): Int = -1
 
     def contains(pos: Long): Boolean = pos < stop
 
@@ -345,8 +345,8 @@ object Span {
 
     def clip(pos: Long): Long = pos
 
-    def compareStart(pos: Long) = 1
-    def compareStop (pos: Long) = -1
+    def compareStart(pos: Long): Int = 1
+    def compareStop (pos: Long): Int = -1
 
     def contains(pos: Long) = false
 
@@ -369,7 +369,7 @@ object Span {
 
     def length: Long = stop - start
 
-    def contains(pos: Long) = pos >= start && pos < stop
+    def contains(pos: Long): Boolean = pos >= start && pos < stop
 
     def shift(delta: Long): Span = Span(start + delta, stop + delta)
 

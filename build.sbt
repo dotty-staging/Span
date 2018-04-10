@@ -1,14 +1,14 @@
 lazy val baseName  = "Span"
 lazy val baseNameL = baseName.toLowerCase
 
-lazy val projectVersion = "1.3.3"
-lazy val mimaVersion    = "1.3.2"
+lazy val projectVersion = "1.4.0-SNAPSHOT"
+lazy val mimaVersion    = "1.4.0"
 
 name               := baseName
 version            := projectVersion
 organization       := "de.sciss"
-scalaVersion       := "2.12.3"
-crossScalaVersions := Seq("2.12.3", "2.11.11", "2.10.6")
+scalaVersion       := "2.12.5"
+crossScalaVersions := Seq("2.12.5", "2.11.12")
 description        := "A simple data type for describing sample frame intervals"
 homepage           := Some(url(s"https://github.com/Sciss/${name.value}"))
 licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt"))
@@ -20,8 +20,8 @@ initialCommands in console := """import de.sciss.span._"""
 scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8", "-Xlint")
 
 libraryDependencies ++= Seq(
-  "de.sciss"      %% "serial"    % "1.0.3",
-  "org.scalatest" %% "scalatest" % "3.0.4" % "test"
+  "de.sciss"      %% "serial"    % "1.1.0-SNAPSHOT",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
 // ---- publishing ----
