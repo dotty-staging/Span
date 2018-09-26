@@ -13,7 +13,7 @@ no warranties. To contact the author, send an email to `contact at sciss.de`
 
     libraryDependencies += "de.sciss" %% "span" % v
 
-The current stable version `v` is `"1.4.1"`
+The current stable version `v` is `"1.4.2"`
 
 ## building
 

@@ -164,6 +164,12 @@ object Span {
       case Void               => Vec(this)
     }
 
+    def startOption : Option[Long] = None
+    def stopOption  : Option[Long] = None
+
+    def startOrElse(default: => Long): Long = default
+    def stopOrElse (default: => Long): Long = default
+
     def write(out: DataOutput): Unit = out.writeByte(3)
   }
 
@@ -240,6 +246,12 @@ object Span {
       case Span.All => Vec.empty
       case _        => Vec(this)
     }
+
+    def startOption : Option[Long] = Some(start)
+    def stopOption  : Option[Long] = None
+
+    def startOrElse(default: => Long): Long = start
+    def stopOrElse (default: => Long): Long = default
 
     def write(out: DataOutput): Unit = {
       out.writeByte(1)
@@ -321,6 +333,12 @@ object Span {
       case _        => Vec(this)
     }
 
+    def startOption : Option[Long] = None
+    def stopOption  : Option[Long] = Some(stop)
+
+    def startOrElse(default: => Long): Long = default
+    def stopOrElse (default: => Long): Long = stop
+
     def write(out: DataOutput): Unit = {
       out.writeByte(2)
       out.writeLong(stop)
@@ -356,6 +374,12 @@ object Span {
 
     val isEmpty  = true
     val nonEmpty = false
+
+    def startOption : Option[Long] = None
+    def stopOption  : Option[Long] = None
+
+    def startOrElse(default: => Long): Long = default
+    def stopOrElse (default: => Long): Long = default
 
     def write(out: DataOutput): Unit = out.writeByte(4)
   }
@@ -463,6 +487,12 @@ object Span {
       case Span.All => Vector.empty
       case _        => if (isEmpty) Vector.empty else Vector(this)
     }
+
+    def startOption : Option[Long] = Some(start)
+    def stopOption  : Option[Long] = Some(stop )
+
+    def startOrElse(default: => Long): Long = start
+    def stopOrElse (default: => Long): Long = stop
 
     def write(out: DataOutput): Unit = {
       out.writeByte(0)
@@ -620,6 +650,12 @@ sealed trait SpanLike extends Writable {
   def subtract(that: Span.Open): SpanLike
 
   def nonEmptyOption: Option[Span.NonVoid]
+
+  def startOption: Option[Long]
+  def stopOption : Option[Long]
+
+  def startOrElse(default: => Long): Long
+  def stopOrElse (default: => Long): Long
 }
 
 sealed trait Span extends Span.SpanOrVoid with Span.HasStart with Span.HasStop {
