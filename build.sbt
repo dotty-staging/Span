@@ -4,6 +4,15 @@ lazy val baseNameL = baseName.toLowerCase
 lazy val projectVersion = "1.4.2"
 lazy val mimaVersion    = "1.4.0"
 
+lazy val deps = new {
+  val main = new {
+    val serial    = "1.1.1"
+  }
+  val test = new {
+    val scalaTest = "3.0.5"
+  }
+}
+
 lazy val root = project.withId(baseNameL).in(file("."))
   .settings(
     name               := baseName,
@@ -18,9 +27,12 @@ lazy val root = project.withId(baseNameL).in(file("."))
     initialCommands in console := """import de.sciss.span._""",
     scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8", "-Xlint"),
     libraryDependencies ++= Seq(
-      "de.sciss"      %% "serial"    % "1.1.1",
-      "org.scalatest" %% "scalatest" % "3.0.5" % Test
-    )
+      "de.sciss" %% "serial" % deps.main.serial
+    ),
+    libraryDependencies += {
+      val v = if (scalaVersion.value == "2.13.0-M5") "3.0.6-SNAP5" else deps.test.scalaTest
+      "org.scalatest" %% "scalatest" % v % Test
+    }
   )
   .settings(publishSettings)
 
