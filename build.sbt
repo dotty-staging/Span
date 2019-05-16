@@ -9,7 +9,7 @@ lazy val deps = new {
     val serial    = "1.1.1"
   }
   val test = new {
-    val scalaTest = "3.0.5"
+    val scalaTest = "3.0.8-RC2"
   }
 }
 
@@ -19,7 +19,7 @@ lazy val root = project.withId(baseNameL).in(file("."))
     version            := projectVersion,
     organization       := "de.sciss",
     scalaVersion       := "2.12.6",
-    crossScalaVersions := Seq("2.12.6", "2.11.12"),
+    crossScalaVersions := Seq("2.12.6", "2.11.12", "2.13.0-RC2"),
     description        := "A simple data type for describing sample frame intervals",
     homepage           := Some(url(s"https://git.iem.at/sciss/${name.value}")),
     licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt")),
@@ -30,8 +30,11 @@ lazy val root = project.withId(baseNameL).in(file("."))
       "de.sciss" %% "serial" % deps.main.serial
     ),
     libraryDependencies += {
-      val v = if (scalaVersion.value == "2.13.0-M5") "3.0.6-SNAP5" else deps.test.scalaTest
-      "org.scalatest" %% "scalatest" % v % Test
+      if (scalaVersion.value == "2.13.0-RC2") {
+        "org.scalatest" % "scalatest_2.13.0-RC1" % deps.test.scalaTest % Test
+      } else {
+        "org.scalatest" %% "scalatest" % deps.test.scalaTest % Test
+      }
     }
   )
   .settings(publishSettings)
