@@ -127,6 +127,10 @@ object Span {
   }
 
   case object All extends FromOrAll with UntilOrAll {
+    override def productPrefix: String = s"Span$$All" // for Product-based serialization
+
+    override def toString: String = "Span.All"
+
     def nonEmptyOption: Option[All.type] = Some(this)
 
     def shift(delta: Long): All.type = this
@@ -174,6 +178,10 @@ object Span {
   }
 
   final case class From(start: Long) extends FromOrAll with HasStart {
+    override def productPrefix: String = s"Span$$From" // for Product-based serialization
+
+    override def toString: String = s"Span.From($start)"
+
     def nonEmptyOption: Option[From] = Some(this)
 
     def clip(pos: Long): Long = math.max(start, pos)
@@ -260,6 +268,10 @@ object Span {
   }
 
   final case class Until(stop: Long) extends UntilOrAll with HasStop {
+    override def productPrefix: String = s"Span$$Until" // for Product-based serialization
+
+    override def toString: String = s"Span.Until($stop)"
+
     def nonEmptyOption: Option[Until] = Some(this)
 
     def clip(pos: Long): Long = math.min(stop, pos)
@@ -346,6 +358,10 @@ object Span {
   }
 
   case object Void extends SpanOrVoid {
+    override def productPrefix: String = s"Span$$Void" // for Product-based serialization
+
+    override def toString: String = "Span.Void"
+
     final val length = 0L
 
     def nonEmptyOption: Option[Span] = None
@@ -387,9 +403,11 @@ object Span {
   private final case class Apply(start: Long, stop: Long) extends Span {
     if (start > stop) throw new IllegalArgumentException(s"A span's start ($start) must be <= its stop ($stop)")
 
+    override def productPrefix: String = "Span" // for Product-based serialization
+
     def nonEmptyOption: Option[Span] = if (start < stop) Some(this) else None
 
-    override def toString = s"Span($start,$stop)"
+    // override def toString = s"Span($start,$stop)"
 
     def length: Long = stop - start
 

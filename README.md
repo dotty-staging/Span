@@ -13,11 +13,11 @@ no warranties. To contact the author, send an email to `contact at sciss.de`
 
     libraryDependencies += "de.sciss" %% "span" % v
 
-The current stable version `v` is `"1.4.2"`
+The current stable version `v` is `"1.4.3"`
 
 ## building
 
-This project builds against Scala 2.13, 2.12, 2.11, using sbt.
+This project builds against Scala 2.13, 2.12, using sbt.
 
 ## documentation
 
