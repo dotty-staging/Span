@@ -1,14 +1,16 @@
 package de.sciss.span
 
-import org.scalatest.{Matchers, FlatSpec}
-import collection.immutable.{IndexedSeq => Vec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 /*
   To run only this suite:
  
   test-only de.sciss.span.SpanSpec
  */
-class SpanSpec extends FlatSpec with Matchers {
+class SpanSpec extends AnyFlatSpec with Matchers {
    val span1   = Span( 30, 40 )
    val span2   = Span( 40, 50 )
    val span3   = Span( 40, 40 )

@@ -1,15 +1,15 @@
 lazy val baseName  = "Span"
 lazy val baseNameL = baseName.toLowerCase
 
-lazy val projectVersion = "1.4.3"
+lazy val projectVersion = "1.4.4"
 lazy val mimaVersion    = "1.4.0"
 
 lazy val deps = new {
   val main = new {
-    val serial    = "1.1.1"
+    val serial    = "1.1.3"
   }
   val test = new {
-    val scalaTest = "3.0.8"
+    val scalaTest = "3.2.2"
   }
 }
 
@@ -18,8 +18,8 @@ lazy val root = project.withId(baseNameL).in(file("."))
     name               := baseName,
     version            := projectVersion,
     organization       := "de.sciss",
-    scalaVersion       := "2.12.10",
-    crossScalaVersions := Seq("2.12.10", "2.13.1"),
+    scalaVersion       := "2.13.3",
+    crossScalaVersions := Seq("0.27.0-RC1", "2.13.3", "2.12.12"),
     description        := "A simple data type for describing sample frame intervals",
     homepage           := Some(url(s"https://git.iem.at/sciss/${name.value}")),
     licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt")),
