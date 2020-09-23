@@ -2,7 +2,7 @@
  *  Span.scala
  *  (Span)
  *
- *  Copyright (c) 2013-2018 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2013-2020 Hanns Holger Rutz. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 
 package de.sciss.span
 
-import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer, Writable}
+import de.sciss.serial.{ConstFormat, DataInput, DataOutput, Writable}
 
 import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -40,7 +40,7 @@ object Span {
   def all : All .type = All
   def void: Void.type = Void
 
-  implicit object serializer extends ImmutableSerializer[Span] {
+  implicit object format extends ConstFormat[Span] {
     def write(v: Span, out: DataOutput): Unit = v.write(out)
 
     def read(in: DataInput): Span = Span.read(in)
@@ -521,7 +521,7 @@ object Span {
 }
 
 object SpanLike {
-  implicit object serializer extends ImmutableSerializer[SpanLike] {
+  implicit object format extends ConstFormat[SpanLike] {
     def write(v: SpanLike, out: DataOutput): Unit = v.write(out)
 
     def read(in: DataInput): SpanLike = SpanLike.read(in)
