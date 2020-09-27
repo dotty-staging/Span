@@ -1,12 +1,12 @@
 lazy val baseName  = "Span"
 lazy val baseNameL = baseName.toLowerCase
 
-lazy val projectVersion = "2.0.0-SNAPSHOT"
+lazy val projectVersion = "2.0.0"
 lazy val mimaVersion    = "2.0.0"
 
 lazy val deps = new {
   val main = new {
-    val serial    = "2.0.0-SNAPSHOT"
+    val serial    = "2.0.0"
   }
   val test = new {
     val scalaTest = "3.2.2"
