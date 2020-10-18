@@ -13,13 +13,16 @@ lazy val deps = new {
   }
 }
 
-lazy val root = project.withId(baseNameL).in(file("."))
+lazy val commonJvmSettings = Seq(
+  crossScalaVersions := Seq("0.27.0-RC1", "2.13.3", "2.12.12"),
+)
+
+lazy val root = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
     name               := baseName,
     version            := projectVersion,
     organization       := "de.sciss",
     scalaVersion       := "2.13.3",
-    crossScalaVersions := Seq("0.27.0-RC1", "2.13.3", "2.12.12"),
     description        := "A simple data type for describing sample frame intervals",
     homepage           := Some(url(s"https://git.iem.at/sciss/${name.value}")),
     licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt")),
@@ -27,10 +30,11 @@ lazy val root = project.withId(baseNameL).in(file("."))
     initialCommands in console := """import de.sciss.span._""",
     scalacOptions      := Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xlint", "-Xsource:2.13"),
     libraryDependencies ++= Seq(
-      "de.sciss"      %% "serial"     % deps.main.serial,
-      "org.scalatest" %% "scalatest"  % deps.test.scalaTest % Test,
+      "de.sciss"      %%% "serial"     % deps.main.serial,
+      "org.scalatest" %%% "scalatest"  % deps.test.scalaTest % Test,
     )
   )
+  .jvmSettings(commonJvmSettings)
   .settings(publishSettings)
 
 // ---- publishing ----
