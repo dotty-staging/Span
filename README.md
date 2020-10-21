@@ -5,8 +5,9 @@
 
 ## statement
 
-Span is a data type for representing sample frame intervals. It is (C)opyright 2013&ndash;2020 by Hanns Holger Rutz. All rights reserved. 
-This project is released under the [GNU Lesser General Public License](https://raw.github.com/Sciss/Span/main/LICENSE) and comes with absolutely
+Span is a data type for representing sample frame intervals. It is (C)opyright 2013&ndash;2020 by Hanns Holger Rutz.
+All rights reserved.  This project is released under the 
+[GNU Lesser General Public License](https://raw.github.com/Sciss/Span/main/LICENSE) and comes with absolutely
 no warranties. To contact the author, send an e-mail to `contact at sciss.de`.
 
 ## linking
@@ -17,5 +18,5 @@ The current stable version `v` is `"2.0.0"`
 
 ## building
 
-This project builds against Scala 2.13, 2.12, using sbt.
+This project builds with sbt against Scala 2.13, 2.12, Dotty (JVM) and Scala 2.13 (JS).
 
