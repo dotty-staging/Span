@@ -14,15 +14,19 @@ lazy val deps = new {
 }
 
 lazy val commonJvmSettings = Seq(
-  crossScalaVersions := Seq("3.0.0-M1", "2.13.3", "2.12.12"),
+  crossScalaVersions := Seq("3.0.0-M2", "2.13.4", "2.12.12"),
 )
+
+// sonatype plugin requires that these are in global
+ThisBuild / version      := projectVersion
+ThisBuild / organization := "de.sciss"
 
 lazy val root = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
     name               := baseName,
-    version            := projectVersion,
-    organization       := "de.sciss",
-    scalaVersion       := "2.13.3",
+//    version            := projectVersion,
+//    organization       := "de.sciss",
+    scalaVersion       := "2.13.4",
     description        := "A simple data type for describing sample frame intervals",
     homepage           := Some(url(s"https://git.iem.at/sciss/${name.value}")),
     licenses           := Seq("LGPL v2.1+" -> url( "http://www.gnu.org/licenses/lgpl-2.1.txt")),
@@ -40,27 +44,20 @@ lazy val root = crossProject(JSPlatform, JVMPlatform).in(file("."))
 // ---- publishing ----
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
-  publishTo := {
-    Some(if (isSnapshot.value)
-      "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-    else
-      "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-    )
-  },
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
-  pomExtra := { val n = name.value
-<scm>
-  <url>git@git.iem.at:sciss/{n}.git</url>
-  <connection>scm:git:git@git.iem.at:sciss/{n}.git</connection>
-</scm>
-<developers>
-   <developer>
-      <id>sciss</id>
-      <name>Hanns Holger Rutz</name>
-      <url>http://www.sciss.de</url>
-   </developer>
-</developers>
-  }
+  developers := List(
+    Developer(
+      id    = "sciss",
+      name  = "Hanns Holger Rutz",
+      email = "contact@sciss.de",
+      url   = url("https://www.sciss.de")
+    )
+  ),
+  scmInfo := {
+    val h = "git.iem.at"
+    val a = s"sciss/${name.value}"
+    Some(ScmInfo(url(s"https://$h/$a"), s"scm:git@$h:$a.git"))
+  },
 )
 
