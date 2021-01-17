@@ -2,7 +2,7 @@
  *  Span.scala
  *  (Span)
  *
- *  Copyright (c) 2013-2020 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2013-2021 Hanns Holger Rutz. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -676,7 +676,7 @@ sealed trait SpanLike extends Writable {
   def stopOrElse (default: => Long): Long
 }
 
-sealed trait Span extends Span.SpanOrVoid with Span.HasStart with Span.HasStop {
+sealed trait Span extends Span.SpanOrVoid with Span.HasStart with Span.HasStop with Product {
   def shift(delta: Long): Span
 
   def intersect(that: SpanLike): Span.SpanOrVoid

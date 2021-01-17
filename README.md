@@ -5,7 +5,7 @@
 
 ## statement
 
-Span is a data type for representing sample frame intervals. It is (C)opyright 2013&ndash;2020 by Hanns Holger Rutz.
+Span is a data type for representing sample frame intervals. It is (C)opyright 2013&ndash;2021 by Hanns Holger Rutz.
 All rights reserved.  This project is released under the 
 [GNU Lesser General Public License](https://raw.github.com/Sciss/Span/main/LICENSE) and comes with absolutely
 no warranties. To contact the author, send an e-mail to `contact at sciss.de`.
@@ -14,7 +14,7 @@ no warranties. To contact the author, send an e-mail to `contact at sciss.de`.
 
     libraryDependencies += "de.sciss" %% "span" % v
 
-The current stable version `v` is `"2.0.0"`
+The current stable version `v` is `"2.0.1"`
 
 ## building
 
